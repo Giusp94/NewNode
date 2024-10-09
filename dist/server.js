@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 require("express-async-errors");
 const morgan_1 = __importDefault(require("morgan"));
-const joi_1 = __importDefault(require("joi"));
+const planets_1 = require("./controllers/planets");
 // DOTENV si utilizza per tenere in un file separato informazioni
 // quali port, database, crittografia, ecc
 require("dotenv/config");
@@ -18,60 +18,16 @@ const port = process.env.PORT;
 // usando express e morgan
 app.use(express_1.default.json());
 app.use((0, morgan_1.default)("dev"));
-// Dichiarazione della variabile
-let planets = [
-    {
-        id: 1,
-        name: "Earth",
-    },
-    {
-        id: 2,
-        name: "Mars",
-    },
-];
-// Configuriamo delle validazioni
-const planetSchema = joi_1.default.object({
-    id: joi_1.default.number().integer().required(),
-    name: joi_1.default.string().required(),
-});
 // Return all planets
-app.get("/api/planets", (req, res) => {
-    res.status(200).json(planets);
-});
+app.get("/api/planets", planets_1.getAll);
 // Return Single planet
-app.get("/api/planets/:id", (req, res) => {
-    const { id } = req.params;
-    const planet = planets.find((planet) => planet.id === Number(id));
-    res.status(200).json(planet);
-});
+app.get("/api/planets/:id", planets_1.getOneByID);
 // Create a planet
-app.post("/api/planets", (req, res) => {
-    const { id, name } = req.body;
-    const newPlanet = { id: id, name };
-    // convalido il nuovo pianeta
-    const validateNewPlanet = planetSchema.validate(newPlanet);
-    if (validateNewPlanet.error) {
-        res.status(400).json({ msg: validateNewPlanet.error.details[0].message });
-        return;
-    }
-    else {
-        planets = [...planets, newPlanet];
-        res.status(201).json({ msg: "Pianeta creato" });
-    }
-});
+app.post("/api/planets", planets_1.createPlanet);
 // Modify planet
-app.put("/api/planets/:id", (req, res) => {
-    const { id } = req.params;
-    const { name } = req.body;
-    planets = planets.map((planet) => planet.id === Number(id) ? Object.assign(Object.assign({}, planet), { name }) : planet);
-    res.status(200).json({ msg: "Pianeta modificato" });
-});
+app.put("/api/planets/:id", planets_1.updateById);
 // Delete planet
-app.delete("/api/planets/:id", (req, res) => {
-    const { id } = req.params;
-    planets = planets.filter((planet) => planet.id !== Number(id));
-    res.status(200).json({ msg: "Pianeta eliminato" });
-});
+app.delete("/api/planets/:id", planets_1.deleteById);
 app.listen(port, () => {
     console.log(`App in ascolto su http://localhost:${port}`);
 });
